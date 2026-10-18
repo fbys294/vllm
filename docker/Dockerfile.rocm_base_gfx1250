@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ubuntu:24.04
+ARG BASE_IMAGE=ghcr.io/goauthentik/fips-python:latest
 ARG ROCM_WHEEL_INDEX=https://rocm.nightlies.amd.com/whl-multi-arch/
 ARG ROCM_SDK_VERSION=10.1.0a20260822
 ARG TORCH_VERSION=2.11.0+rocm10.1.0a20260822
@@ -52,17 +52,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install Python and other dependencies
 RUN apt-get update -y \
     && apt-get install -y software-properties-common git curl sudo vim less libgfortran5 libopenmpi-dev libpci-dev liblzma-dev libnuma-dev libdrm-dev pkg-config g++ \
-    && for i in 1 2 3; do \
-    add-apt-repository -y ppa:deadsnakes/ppa && break || \
-    { echo "Attempt $i failed, retrying in 5s..."; sleep 5; }; \
-    done \
-    && apt-get update -y \
-    && apt-get install -y python${PYTHON_VERSION} python${PYTHON_VERSION}-dev python${PYTHON_VERSION}-venv \
-    python${PYTHON_VERSION}-lib2to3 python-is-python3  \
-    && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 \
-    && update-alternatives --set python3 /usr/bin/python${PYTHON_VERSION} \
-    && ln -sf /usr/bin/python${PYTHON_VERSION}-config /usr/bin/python3-config \
-    && python3 --version
+    && rm -rf /var/lib/apt/lists/*
 
 ENV VIRTUAL_ENV=/opt/venv
 RUN python${PYTHON_VERSION} -m venv "${VIRTUAL_ENV}" && \
@@ -124,7 +114,7 @@ RUN pip install --pre --index-url "${ROCM_WHEEL_INDEX}" \
     "torchaudio==${TORCHAUDIO_VERSION}" \
     "rocm[libraries,devel,device-gfx1250]==${ROCM_SDK_VERSION}" && \
     rocm-sdk init
- 
+  
 # Torch runtime deps that may not be published on the ROCm wheel index;
 # install them from PyPI afterwards.
 RUN pip install filelock "typing-extensions>=4.10.0" "sympy>=1.13.3" \

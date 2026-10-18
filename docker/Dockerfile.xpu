@@ -39,7 +39,7 @@ RUN --mount=type=cache,target=/root/.cargo/registry,sharing=locked \
     --mount=type=bind,source=.git,target=.git \
     SETUPTOOLS_SCM_PRETEND_METADATA="{dirty=false}" bash tools/build_rust.sh
 
-FROM ubuntu:24.04 AS vllm-base
+FROM ghcr.io/goauthentik/fips-python:latest AS vllm-base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -65,8 +65,6 @@ RUN apt-get update -y && \
     wget \
     vim \
     ca-certificates \
-    python3.12 \
-    python3.12-dev \
     python3-pip && \
     rm -rf /var/lib/apt/lists/*
 
@@ -202,7 +200,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     python -m pip wheel --no-deps . -w /tmp/nixl_wheels/ && \
     find /opt/ucx -type f \( -name '*.a' -o -name '*.la' \) -delete && \
     rm -rf /opt/ucx/{include,share,etc} /opt/ucx/lib/cmake \
-           /tmp/ucx_source /tmp/nixl_source
+            /tmp/ucx_source /tmp/nixl_source
 
 FROM vllm-base AS vllm-openai
 ENV UV_COMPILE_BYTECODE=1
